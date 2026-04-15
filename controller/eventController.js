@@ -1,45 +1,55 @@
 const Event = require('../model/eventModel');
 
 // GET: Get all events
-// NEW (supports category filtering):
 const getAllEvents = async (req, res) => {
   try {
     const { category } = req.query;
-
     let filter = {};
     if (category) {
       filter.category = category;
     }
-
     const events = await Event.find(filter).populate("category");
     res.status(200).json(events);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching events", error });
+    res.status(500).json({ message: "Error fetching events", error: error.message });
   }
 };
-
 
 // POST: Create a single event
 const createEvent = async (req, res) => {
   try {
-    const event = new Event(req.body);
+    const eventData = {
+      ...req.body,
+      createdBy: req.user._id // Protect middleware se user ID milti hai
+    };
+    const event = new Event(eventData);
     await event.save();
     res.status(201).json(event);
   } catch (error) {
-    res.status(400).json({ message: 'Error creating event', error });
+    res.status(400).json({ message: 'Error creating event', error: error.message });
   }
 };
 
-// DELETE: Delete event by ID
+// UPDATE: Update event by ID
+const updateEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedEvent = await Event.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updatedEvent) return res.status(404).json({ message: 'Event not found' });
+    res.status(200).json(updatedEvent);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating event', error: err.message });
+  }
+};
+
+// DELETE: Delete event
 const deleteEvent = async (req, res) => {
   try {
     const deletedEvent = await Event.findByIdAndDelete(req.params.id);
-    if (!deletedEvent) {
-      return res.status(404).json({ message: 'Event not found' });
-    }
+    if (!deletedEvent) return res.status(404).json({ message: 'Event not found' });
     res.status(200).json({ message: 'Event deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting event', error });
+    res.status(500).json({ message: 'Error deleting event', error: error.message });
   }
 };
 
@@ -49,52 +59,26 @@ const createMultipleEvents = async (req, res) => {
     const events = await Event.insertMany(req.body);
     res.status(201).json({ message: 'Events created successfully', events });
   } catch (error) {
-    res.status(400).json({ message: 'Error creating events', error });
-  }
-};
-//
-const updateEvent = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedEvent = await Event.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updatedEvent) {
-      return res.status(404).json({ message: 'Event not found' });
-    }
-    res.status(200).json(updatedEvent);
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating event', error: err.message });
+    res.status(400).json({ message: 'Error creating events', error: error.message });
   }
 };
 
+// GET: Search events
 const searchEvents = async (req, res) => {
   try {
     const { query } = req.query;
+    if (!query) return res.json([]);
 
-    if (!query) {
-      // Agar query empty hai toh empty array bhej do crash karne ke bajaye
-      return res.json([]);
-    }
-
-    // Hum title aur venue dono mein search karenge kyunki aapke card mein venue dikh raha hai
     const filters = {
       $or: [
         { title: { $regex: query, $options: "i" } },
-        { venue: { $regex: query, $options: "i" } },
-        { location: { $regex: query, $options: "i" } } // Dono rakhte hain safety ke liye
+        { venue: { $regex: query, $options: "i" } }
       ]
     };
-
-    // .populate("category") tabhi karein agar category model exist karta hai
-    const events = await Event.find(filters).populate("category"); 
-    
+    const events = await Event.find(filters).populate("category");
     res.json(events);
   } catch (error) {
-    // Error ko console mein log karein taaki terminal mein error dikhe
-    console.error("Search Error Specifics:", error); 
-    res.status(500).json({ 
-      message: "Search failed", 
-      error: error.message // error object ki jagah message bhejein
-    });
+    res.status(500).json({ message: "Search failed", error: error.message });
   }
 };
 
@@ -102,19 +86,16 @@ const searchEvents = async (req, res) => {
 const getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id).populate("category");
-    if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
-    }
+    if (!event) return res.status(404).json({ message: 'Event not found' });
     res.status(200).json(event);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching event details', error });
+    res.status(500).json({ message: 'Error fetching event details', error: error.message });
   }
 };
 
-// module.exports mein isse bhi add karein
 module.exports = {
   getAllEvents,
-  getEventById, // Ye naya add kiya
+  getEventById,
   createEvent,
   deleteEvent,
   createMultipleEvents,

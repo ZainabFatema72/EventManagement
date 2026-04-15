@@ -1,34 +1,21 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/authMiddleware'); 
+const { verifyAdmin } = require('../middleware/adminMiddleware');
 const { 
-  getAllEvents, 
-  getEventById, 
-  createEvent, 
-  deleteEvent, 
-  createMultipleEvents, 
-  updateEvent, 
-  searchEvents 
+  getAllEvents, getEventById, createEvent, 
+  deleteEvent, createMultipleEvents, updateEvent, searchEvents 
 } = require('../controller/eventController');
 
-// ✅ Sabse pehle search route
+// Public Routes
 router.get("/search", searchEvents);
-// 2. GET all events
 router.get('/', getAllEvents);
-
-// 3. GET single event by ID
 router.get('/:id', getEventById); 
 
-// 4. POST routes
-router.post('/', createEvent);
-router.post('/many', createMultipleEvents);
-
-// 5. UPDATE & DELETE
-router.patch('/:id', updateEvent);
-router.delete("/:id", deleteEvent);
-
-
-// Baaki routes uske niche
-router.get("/", getAllEvents);
-router.get("/:id", getEventById); 
+// Admin Secured Routes (Token and Role Required)
+router.post('/', protect, verifyAdmin, createEvent);
+router.patch('/:id', protect, verifyAdmin, updateEvent);
+router.delete("/:id", protect, verifyAdmin, deleteEvent);
+router.post('/many', protect, verifyAdmin, createMultipleEvents);
 
 module.exports = router;
