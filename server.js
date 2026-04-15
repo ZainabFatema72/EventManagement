@@ -8,7 +8,10 @@ dotenv.config(); // Load .env file
 connectDB();     // Connect to MongoDB
 const app = express();
 //middleware
-app.use(cors()); // Isse frontend (port 3000) backend (port 5000) se baat kar payega
+app.use(cors({
+  origin: 'https://eventlyhubb.netlify.app' 
+})); 
+
 app.use(express.json()); // Body parser for JSON
 
 // Models
