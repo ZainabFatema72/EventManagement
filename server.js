@@ -9,8 +9,11 @@ connectDB();     // Connect to MongoDB
 const app = express();
 //middleware
 app.use(cors({
-  origin: 'https://eventlyhubb.netlify.app' 
-})); 
+  origin: 'https://eventlyhubb.netlify.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 app.use(express.json()); // Body parser for JSON
 
