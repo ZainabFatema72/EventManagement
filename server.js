@@ -15,9 +15,7 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json()); // Body parser for JSON
-
-// Models
+app.use(express.json()); 
 const Event = require('./model/eventModel');
 const Booking = require('./model/bookingModel');
 const User= require('./model/userModel')
@@ -30,7 +28,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 
 
 // Mount your route files here
-app.use("/api/auth", authRoutes);//GET /api/auth/profile
+app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -39,7 +37,6 @@ app.use("/api/notifications", notificationRoutes);
 app.get("/", (req, res) => {
   res.send("Welcome to Event Booking API");
 });
-
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
